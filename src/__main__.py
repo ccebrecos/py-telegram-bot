@@ -4,7 +4,6 @@ import logging
 # Relative imports
 import src.log
 from src.cli.arguments.constants import LOGS_LEVELS, LOGS
-from res.private.telegram import TOKEN
 from src.bot.main import bot
 
 # Constants
@@ -18,7 +17,6 @@ if __name__ == "__main__":
     root_logger.setLevel(LOGS_LEVELS[LOGS.index('debug')])
     # Welcome
     LOGGER.info("Welcome!")
-    LOGGER.debug("token: %s", TOKEN)
     bot.polling()
     # Exiting
     LOGGER.info("Bye!")

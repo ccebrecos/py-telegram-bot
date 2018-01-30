@@ -5,6 +5,7 @@ import telebot
 # Relative imports
 from res.private.telegram import TOKEN
 from src.rpc.rpc import makeRequest
+from src.ws.ws import send, rcv
 
 # Constants
 LOGGER = logging.getLogger(__name__)
@@ -24,6 +25,24 @@ def help(message):
     result = makeRequest(p)
     LOGGER.debug("response: %s", result)
     bot.reply_to(message, result)
+
+
+@bot.message_handler(commands=['ping'])
+def ping(message):
+    msg = {"op": "ping"}
+    send(msg)
+    result = rcv()
+    bot.reply_to(message, result)
+
+
+@bot.message_handler(commands=['sub'])
+def sub(message):
+    msg = {"op": "blocks_sub"}
+    send(msg)
+
+    while True:
+        result = rcv()
+        bot.reply_to(message, result)
 
 
 @bot.message_handler(func=lambda m: True)

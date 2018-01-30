@@ -33,4 +33,18 @@ def rcv():
 
 
 def close():
+    """
+    Closes the connection with the websocket
+    """
     ws.close()
+
+
+def sub_address(addr):
+    """
+    Subscrive to address notifications
+
+    Args:
+        addr (str): Address to be monitored
+    """
+    data = {"op": "addr_sub", "addr": addr}
+    send(data)
