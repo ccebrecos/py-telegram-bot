@@ -4,7 +4,7 @@ import logging
 from websocket import create_connection
 
 # Relative imports
-from res.private.ws import URL
+from res.private.wstestnet import URL
 
 # Constants
 LOGGER = logging.getLogger(__name__)
