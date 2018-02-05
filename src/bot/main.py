@@ -5,8 +5,10 @@ import json
 
 # Relative imports
 from res.private.telegram import TOKEN
+from res.private.explorer import EXPLORER
 from src.rpc.rpc import makeRequest
 from src.ws.ws import send, rcv
+
 
 # Constants
 LOGGER = logging.getLogger(__name__)
@@ -64,8 +66,9 @@ def sub(message):
             elif result['type'] == "new-block":
                 block = result['payload']
                 message = "New block at height  " + str(block['height']) + \
-                          " with id: " + block['hash'] + "."
+                          " with id: " + block['hash'] + ".\n\n"
 
+                message += EXPLORER + "block/" + str(block['height'])
                 for chat in SUBS:
                     bot.send_message(chat, message)
         LOGGER.debug("Stopping loop")
@@ -164,12 +167,12 @@ def listen(message):
                         message += "to"
 
                     txid = transaction['txid']
-                    message += " the address with id: " + txid
+                    message += " the address with id: " + txid + "\n\n"
+                    message += EXPLORER + "tx/" + txid
 
                     bot.send_message(chat, message)
 
 
-"""
 @bot.message_handler(func=lambda m: True)
 def rpc(message):
     LOGGER.debug("message %s, received from: %s", message.text,
@@ -183,7 +186,6 @@ def rpc(message):
     elif meth == "stop":
         result = "mmm nope"
     else:
-        LOGGER.debug("making request with %s", p)
         result = makeRequest(p)
         result = str(result)
 
@@ -191,4 +193,3 @@ def rpc(message):
         result = "There's no response for that request."
     LOGGER.debug("response: %s", result)
     bot.reply_to(message, result)
-"""
