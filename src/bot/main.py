@@ -31,20 +31,9 @@ def help(message):
     bot.reply_to(message, result)
 
 
-@bot.message_handler(commands=['ping'])
-def ping(message):
-    msg = {"op": "ping"}
-    send(msg)
-    result = rcv()
-    bot.reply_to(message, result)
-
-
-@bot.message_handler(commands=['test'])
-def test(message):
-    chat = message.chat
-    print(chat)
-    print(chat.id)
-    bot.send_message(chat.id, "Hello")
+"""
+    BLOCKS MONITORING METHODS
+"""
 
 
 @bot.message_handler(commands=['sub'])
@@ -65,7 +54,6 @@ def sub(message):
         LOGGER.debug("Starting loop")
         while INIT:
             result_str = rcv()
-
             result = json.loads(result_str)
 
             # Heartbeat
@@ -75,8 +63,8 @@ def sub(message):
             # New block incoming
             elif result['type'] == "new-block":
                 block = result['payload']
-                message = "New block with id: " + block['hash'] + \
-                          " at height: " + str(block['height']) + "."
+                message = "New block at height  " + str(block['height']) + \
+                          " with id: " + block['hash'] + "."
 
                 for chat in SUBS:
                     bot.send_message(chat, message)
@@ -125,6 +113,60 @@ def unsubscribe(chat):
 
     message = "You are now unsubscribed to block push notifications !"
     bot.send_message(chat, message)
+
+
+"""
+    ADDRESS MONITORING METHODS
+"""
+
+
+@bot.message_handler(commands=['listen'])
+def listen(message):
+    params = message.text.split()[1:]
+    chat, response = message.chat.id, ""
+
+    if not params:
+        response = "You must provide the address to listen to"
+        bot.send_message(chat, response)
+    else:
+        addr = params[0]
+        if not(len(addr) == 33 or len(addr) == 35):
+            response = "The address %s is not valid" % addr
+            bot.send_message(chat, response)
+        else:
+            msg = {"type": "address", "address": addr}
+            send(msg)
+
+            LOGGER.debug("%s subscribed to address %s" % (chat, addr))
+
+            response = "Successfully subscribed to address: " + str(addr)
+            bot.send_message(chat, response)
+
+            while True:
+                result_str = rcv()
+                result = json.loads(result_str)
+
+                # Heartbeat
+                if result['type'] == "heartbeat":
+                    LOGGER.debug("Got %s from websocket." % result)
+                # New block incoming
+                elif result['type'] == "address":
+                    # Get variables
+                    addr = result['payload']['address']
+                    transaction = result['payload']['transaction']
+                    # Info to give
+                    message = "New transaction for address " + addr + ".\n" + \
+                        "Created transaction "
+
+                    if addr in transaction['inputs'][0]['addresses']:
+                        message += "from"
+                    elif addr in transaction['outputs'][0]['addresses']:
+                        message += "to"
+
+                    txid = transaction['txid']
+                    message += " the address with id: " + txid
+
+                    bot.send_message(chat, message)
 
 
 """
