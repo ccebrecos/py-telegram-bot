@@ -5,7 +5,7 @@ import json
 
 # Relative imports
 from res.private.telegram import TOKEN
-from res.private.explorer import EXPLORER
+from res.public.explorer import EXPLORER
 from src.rpc.rpc import makeRequest
 from src.ws.ws import send, rcv
 
