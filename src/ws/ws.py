@@ -8,7 +8,7 @@ from res.private.wstestnet import URL
 
 # Constants
 LOGGER = logging.getLogger(__name__)
-ws = create_connection(URL)
+ws = None
 
 
 # Functions
@@ -32,19 +32,13 @@ def rcv():
     return result
 
 
-def close():
+def open_con(url=URL):
+    global ws
+    ws = create_connection(url)
+
+
+def close_con():
     """
     Closes the connection with the websocket
     """
     ws.close()
-
-
-def sub_address(addr):
-    """
-    Subscrive to address notifications
-
-    Args:
-        addr (str): Address to be monitored
-    """
-    data = {"op": "addr_sub", "addr": addr}
-    send(data)
