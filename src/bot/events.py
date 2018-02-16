@@ -85,9 +85,28 @@ def handle_response(rsp):
         for chat in ADDR_SUBS[addr]:
             bot.send_message(chat, message)
 
+    # Subscription response
+    elif rsp['type'] == "subscribe-response":
+        LOGGER.debug("Subscription processed: %s" % rsp)
+        # Check subscription success
+        if not rsp['payload']['success']:
+            handle_suscription_error(rsp['payload']['message'])
+
     # Unexpected message received
     else:
         LOGGER.debug("Got %s from websocket." % rsp)
+
+
+def handle_suscription_error(err_msg):
+    """
+    Handles the error messages for the suscriptions to the websockets and does
+    the propper things.
+
+    Args:
+        err_msg(str): Error message received from the websocket
+    """
+    # Handle all known errors
+    LOGGER.debug("Unhandled suscription error: %s" % err_msg)
 
 
 def check_stop():
@@ -175,30 +194,33 @@ def listen(chat, addr):
         addr (str): Address in order to listen to
     """
     global ADDR_SUBS, LOOP
-    message = ""
+    message, succ = "", False
 
     # New address to listen to
     if addr not in ADDR_SUBS.keys():
         msg = {"type": "address", "address": addr}
         send(msg)
+        succ = True
 
-        result_str = rcv()
-        print(result_str)
-        result = json.loads(result_str)
+        # Loop not started before
+        if not LOOP:
+            LOOP = True
+            _thread.start_new_thread(recv_loop, ())
 
-        # Check subscription success
-        if not result['payload']['success']:
-            message += "Failed to subscribe; %s" % result['payload']['message']
+    # Address suscribed
+    else:
+        # Same chat to same address
+        if chat in ADDR_SUBS[addr]:
+            message = "You are already suscribed to address " + addr
+        # New chat for that address
         else:
-            # Loop not started before
-            if not LOOP:
-                LOOP = True
-                _thread.start_new_thread(recv_loop, ())
+            succ = True
 
-            # Add address to list
-            ADDR_SUBS[addr] = ADDR_SUBS.get(addr, []) + [chat]
-
-            message += "Successfully subscribed to address %s events" % addr
+    # Success
+    if succ:
+        # Add address to list
+        ADDR_SUBS[addr] = ADDR_SUBS.get(addr, []) + [chat]
+        message += "Successfully subscribed to address %s events" % addr
 
     bot.send_message(chat, message)
 
