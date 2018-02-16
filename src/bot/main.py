@@ -5,6 +5,7 @@ import logging
 from src.bot.bot import bot
 from src.bot.events import listen, unlisten
 from src.bot.events import subscribe, unsubscribe
+from src.btc.addr import check_addr
 from src.rpc.rpc import makeRequest
 
 
@@ -64,11 +65,16 @@ def handle_listener(message, unsubscribe):
         bot.send_message(chat, response)
     else:
         addr = params[0]
-        # Subscribe/unsubscribe chat to address events
-        if unsubscribe:
-            unlisten(chat, addr)
+        # If valid address
+        if check_addr(addr):
+            # Subscribe/unsubscribe chat to address events
+            if unsubscribe:
+                unlisten(chat, addr)
+            else:
+                listen(chat, addr)
         else:
-            listen(chat, addr)
+            response = "The address provided is not valid"
+            bot.send_message(chat, response)
 
 
 @bot.message_handler(commands=['listen'])
